@@ -1,26 +1,22 @@
 WITH RECURSIVE input(value) AS (
-    VALUES (12)
+    VALUES (289326)
 ),
-abc AS (
+my_recursion AS (
     SELECT null::bigint AS value,
            0 AS idx,
            null::int AS x,
            null::int AS y,
            0 AS next_x,
            0 AS next_y,
-           null::point AS debug,
-           null::int[] AS debug2,
            ARRAY[1,0]::int[] AS direction,
            jsonb_build_object(point(0, 0)::text, 1) AS sum_values
     UNION ALL
-    SELECT (sum_values->>(point(next_x, next_y)::text))::bigint,
+    SELECT v,
            idx + 1,
            next_x,
            next_y,
            next_x+direction[1],
            next_y+direction[2],
-           point(next_x+direction[1], next_y+direction[2]),
-           direction,
            -- Any time we don't see any value in front of us we need
            -- to "turn left"
            CASE sum_values ? point(next_x+2*direction[1], next_y+2*direction[2])::text
@@ -38,26 +34,31 @@ abc AS (
                     THEN ARRAY[0,1]
                 END
            END,
-           (sum_values - point(next_x+direction[1],next_y+direction[2])::text)
-            ||jsonb_build_object(point(next_x-1, next_y-1), value)
-            ||jsonb_build_object(point(next_x-1, next_y), value)
-            ||jsonb_build_object(point(next_x-1, next_y+1), value)
-            ||jsonb_build_object(point(next_x, next_y-1), value)
-            ||jsonb_build_object(point(next_x, next_y+1), value)
-            ||jsonb_build_object(point(next_x+1, next_y-1), value)
-            ||jsonb_build_object(point(next_x+1, next_y), value)
-            ||jsonb_build_object(point(next_x+1, next_y+1), value)
-      FROM abc
-     WHERE idx < (SELECT value FROM input)
+            -- We add the current value to all our neighbours
+            sum_values||
+            (SELECT jsonb_object_agg(p::text, v + coalesce((sum_values->>(p::text))::int, 0))
+               FROM (
+                    VALUES (point(next_x-1, next_y-1)),
+                           (point(next_x-1, next_y)),
+                           (point(next_x-1, next_y+1)),
+                           (point(next_x, next_y-1)),
+                           (point(next_x, next_y+1)),
+                           (point(next_x+1, next_y+1)),
+                           (point(next_x+1, next_y)),
+                           (point(next_x+1, next_y-1))
+               ) sub(p)
+            )
+      FROM my_recursion,
+      LATERAL (VALUES ((sum_values->>(point(next_x, next_y)::text))::bigint)) AS v(v)
+     WHERE v < (SELECT value*10 FROM input)
 )
 SELECT
-    value,
     idx,
-    x,
-    y,
-    debug,
-    debug2,
-    direction
-    --jsonb_pretty(sum_values)
+    mr.value
 FROM
-    abc;
+    my_recursion mr
+JOIN
+    input i ON (mr.value > i.value)
+ORDER BY
+    mr.value
+LIMIT 1;
