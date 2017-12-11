@@ -1,11 +1,11 @@
-CREATE OR REPLACE FUNCTION day5_part2 (text default null)
-RETURNS bigint
-LANGUAGE SQL AS $BODY$
+DEALLOCATE day5_2;
+
+PREPARE day5_2 AS
 WITH RECURSIVE vals AS (
     SELECT
         jumps::bigint[]
     FROM
-        trim(coalesce($1, (SELECT input FROM input WHERE day=5))) AS t(v),
+        trim($1::text) AS t(v),
         LATERAL regexp_split_to_array(v, E'\n') AS r(jumps)
 ), jumping AS (
     SELECT
@@ -38,5 +38,11 @@ FROM
     jumping
 ORDER BY
     count DESC
-LIMIT 1
-$BODY$;
+LIMIT 1;
+
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=5
+\gset
+-- You need > 100GB of free space to execute this one ...
+-- EXECUTE day5_2(:'input');

@@ -1,11 +1,11 @@
-CREATE OR REPLACE FUNCTION day5_part1 (text default null)
-RETURNS bigint
-LANGUAGE SQL AS $BODY$
+DEALLOCATE day5_1;
+
+PREPARE day5_1 AS
 WITH RECURSIVE vals AS (
     SELECT
         jumps::bigint[]
     FROM
-        trim(coalesce($1, (SELECT input FROM input WHERE day=5))) AS t(v),
+        trim($1::text) AS t(v),
         LATERAL regexp_split_to_array(v, E'\n') AS r(jumps)
 ), jumping AS (
     SELECT
@@ -28,4 +28,8 @@ SELECT
     max(count)
 FROM
     jumping;
-$BODY$;
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=5
+\gset
+EXECUTE day5_1(:'input');

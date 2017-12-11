@@ -1,5 +1,8 @@
+DEALLOCATE day3_2;
+
+PREPARE day3_2 AS
 WITH RECURSIVE input(value) AS (
-    VALUES (289326)
+    VALUES ($1::text::bigint)
 ),
 my_recursion AS (
     SELECT null::bigint AS value,
@@ -62,3 +65,13 @@ JOIN
 ORDER BY
     mr.value
 LIMIT 1;
+
+-- Example values
+EXECUTE day3_2('1');
+EXECUTE day3_2('12');
+EXECUTE day3_2('23');
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=3
+\gset
+EXECUTE day3_2(:'input');

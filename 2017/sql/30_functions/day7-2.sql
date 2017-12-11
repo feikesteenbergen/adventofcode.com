@@ -1,12 +1,13 @@
-CREATE OR REPLACE FUNCTION day7_part2 (text default null, OUT name text, OUT current_weight bigint, OUT correct_weight bigint)
-LANGUAGE SQL AS $BODY$
+DEALLOCATE day7_2;
+
+PREPARE day7_2 AS
 WITH RECURSIVE data AS (
     SELECT
         tokens[1] AS name,
         tokens[2]::bigint AS weight,
         nullif(items, '{""}') AS items
     FROM
-        trim(coalesce($1, (SELECT input FROM input WHERE day=7))) AS t(input),
+        trim($1::text) AS t(input),
         LATERAL regexp_split_to_table(input, E'\n') AS rstt(line),
         LATERAL regexp_matches(line, '(\w+) \((\d+)\)(?: -> (.*))?') AS rm(tokens),
         LATERAL regexp_split_to_array(coalesce(tokens[3], ''), ', ') AS rstt2(items)
@@ -87,4 +88,8 @@ JOIN
 WHERE
     sum_weight != mode
 ;
-$BODY$;
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=7
+\gset
+EXECUTE day7_2(:'input');

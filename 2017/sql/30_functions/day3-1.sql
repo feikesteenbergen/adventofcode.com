@@ -1,3 +1,6 @@
+DEALLOCATE day3_1;
+
+PREPARE day3_1 AS
 WITH input AS (
     SELECT
         input,
@@ -12,7 +15,7 @@ WITH input AS (
              ELSE lower+2
         END::bigint AS upper
     FROM
-        (VALUES (289326), (1024), (25), (26), (54), (49), (34), (39), (48), (3), (8)) AS v(input),
+        (VALUES ($1::text::bigint)) AS v(input),
     LATERAL floor((input-1)^0.5) AS lb(lower)
 ) , spiral_info AS (
     SELECT
@@ -37,3 +40,13 @@ FROM
     spiral_info
 ORDER BY
     input;
+
+-- Example values
+EXECUTE day3_1('1');
+EXECUTE day3_1('12');
+EXECUTE day3_1('23');
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=3
+\gset
+EXECUTE day3_1(:'input');

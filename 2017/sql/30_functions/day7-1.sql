@@ -1,8 +1,8 @@
-CREATE OR REPLACE FUNCTION day7_part1 (text default null)
-RETURNS text
-LANGUAGE SQL AS $BODY$
+DEALLOCATE day7_1;
+
+PREPARE day7_1 AS
 WITH input(input) AS (
-    SELECT trim(coalesce($1, (SELECT input FROM input WHERE day=7)))
+    SELECT trim($1::text)
 ), data AS (
     SELECT
         tokens[1] AS name,
@@ -21,5 +21,9 @@ FROM
 LEFT JOIN
     data b ON (a.name=b.item)
 WHERE
-    b.item IS NULL
-$BODY$;
+    b.item IS NULL;
+
+-- my personal value
+SELECT input FROM adventofcode.input WHERE day=7
+\gset
+EXECUTE day7_1(:'input');
